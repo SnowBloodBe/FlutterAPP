@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "698498246462",
+    "project_id": "pendufirebase",
+    "storage_bucket": "pendufirebase.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:698498246462:android:939aefa09641679bbeae6f",
+        "android_client_info": {
+          "package_name": "com.example.pendu_firebase"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBgxNqQd38keTHm0s3J18FtltUfQSJLwA8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

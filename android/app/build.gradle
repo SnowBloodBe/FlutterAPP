@@ -1,0 +1,46 @@
+plugins {
+    id "com.android.application"
+    id "kotlin-android"
+    id "dev.flutter.flutter-gradle-plugin"
+    id "com.google.gms.google-services" // Plugin pour Firebase (après Flutter)
+}
+
+android {
+    namespace = "com.example.pendu_firebase"
+    compileSdk = flutter.compileSdkVersion
+    ndkVersion = flutter.ndkVersion
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+
+    kotlinOptions {
+        jvmTarget = "1.8"
+    }
+
+    defaultConfig {
+        applicationId = "com.example.pendu_firebase" // Votre application ID
+        minSdk = 23 // Vérifiez que c'est au moins 23
+        targetSdk = 33
+        versionCode = flutter.versionCode
+        versionName = flutter.versionName
+    }
+
+    buildTypes {
+        release {
+            // TODO: Ajouter une configuration de signature pour la release
+            signingConfig signingConfigs.debug
+        }
+    }
+}
+
+flutter {
+    source = "../.."
+}
+
+dependencies {
+    implementation platform('com.google.firebase:firebase-bom:31.2.3') // Firebase BOM
+    implementation 'com.google.firebase:firebase-auth' // Firebase Auth
+    implementation 'com.google.firebase:firebase-firestore' // Firebase Firestore
+}
