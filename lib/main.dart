@@ -1,12 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:pendu_firebase/services/data_import.dart';
 import 'screens/auth_screen.dart';
 import 'screens/pendu_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
+   // Appeler la fonction pour importer les joueurs une seule fois
+  await importPlayersFromJson();
   runApp(const PenduJeuApp());
 }
 
