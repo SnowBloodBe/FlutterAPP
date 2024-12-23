@@ -8,12 +8,10 @@ import 'screens/pendu_screen.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
-   // Appeler la fonction pour importer les joueurs une seule fois
+  // Appeler la fonction pour importer les joueurs une seule fois
   await importPlayersFromJson();
   runApp(const PenduJeuApp());
 }
-
-
 
 class PenduJeuApp extends StatelessWidget {
   const PenduJeuApp({super.key});
@@ -23,14 +21,29 @@ class PenduJeuApp extends StatelessWidget {
     return MaterialApp(
       title: 'Jeu du Pendu',
       theme: ThemeData(
-        brightness: Brightness.dark,
-        primarySwatch: Colors.blue,
+      brightness: Brightness.dark,
+      primarySwatch: Colors.blue,
+      textTheme: const TextTheme(
+    bodyLarge: TextStyle(fontSize: 16, color: Colors.white),
+    bodyMedium: TextStyle(fontSize: 14, color: Colors.white70),
+    headlineLarge: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
+    headlineMedium: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+  ),
+        elevatedButtonTheme: ElevatedButtonThemeData(
+          style: ElevatedButton.styleFrom(
+            backgroundColor: Colors.blueAccent,
+            padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 20),
+            textStyle: const TextStyle(
+              fontWeight: FontWeight.bold,
+              fontSize: 16,
+            ),
+          ),
+        ),
       ),
       routes: {
-  '/auth': (context) => const AuthScreen(),
-  '/pendu': (context) => const PenduScreen(),
-},
-
+        '/auth': (context) => const AuthScreen(),
+        '/pendu': (context) => const PenduScreen(),
+      },
       home: const AuthWrapper(),
     );
   }
@@ -41,29 +54,6 @@ class AuthWrapper extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-       return const AuthScreen(); // Force l'écran d'authentification au démarrage
-
-   
-   /* return StreamBuilder<User?>(
-      stream: FirebaseAuth.instance.authStateChanges(),
-      builder: (context, snapshot) {*/
-        // Si l'utilisateur est connecté, affiche l'écran du jeu
-       /* if (snapshot.connectionState == ConnectionState.active) {
-          if (snapshot.hasData) {
-            return const PenduScreen();
-          } else {
-            return const AuthScreen();
-          }
-        }*/
-
-
-        // Pendant le chargement
-        /*return const Scaffold(
-          body: Center(
-            child: CircularProgressIndicator(),
-          ),
-        );
-      },
-    );*/
+    return const AuthScreen(); // Force l'écran d'authentification au démarrage
   }
 }
