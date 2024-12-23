@@ -30,7 +30,7 @@ class _AuthScreenState extends State<AuthScreen> {
 
     if (user != null) {
       // Redirigez vers l'écran de jeu
-      Navigator.pushReplacementNamed(context, '/pendu');
+      Navigator.pushReplacementNamed(context, '/home');
     }
   }
 
@@ -84,7 +84,7 @@ class _AuthScreenState extends State<AuthScreen> {
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         const Text(
-                          "Bienvenue",
+                          "Bienvenue dans Golazo",
                           style: TextStyle(
                             fontSize: 24,
                             fontWeight: FontWeight.bold,

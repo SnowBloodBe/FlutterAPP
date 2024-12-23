@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:pendu_firebase/screens/home_screen.dart';
 import 'screens/auth_screen.dart';
 import 'screens/pendu_screen.dart';
 
@@ -24,6 +25,7 @@ class PenduJeuApp extends StatelessWidget {
       routes: {
         '/auth': (context) => const AuthScreen(),
         '/pendu': (context) => const PenduScreen(),
+        '/home': (context) => const HomeScreen(), // Ajoute cette ligne
       },
       home: const AuthWrapper(),
     );
@@ -39,7 +41,6 @@ class AuthWrapper extends StatelessWidget {
       stream: FirebaseAuth.instance.authStateChanges(),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
-          // Afficher un indicateur de chargement
           return const Scaffold(
             body: Center(
               child: CircularProgressIndicator(),
@@ -49,14 +50,20 @@ class AuthWrapper extends StatelessWidget {
 
         if (snapshot.hasData) {
           // Si un utilisateur est connecté
-          debugPrint("Utilisateur connecté : ${snapshot.data?.email}");
-          return const PenduScreen();
+          Future.microtask(() {
+            Navigator.pushReplacementNamed(context, '/home'); // Redirection vers HomeScreen
+          });
         } else {
           // Si aucun utilisateur n'est connecté
-          debugPrint("Aucun utilisateur connecté, redirection vers AuthScreen.");
-          return const AuthScreen();
+          Future.microtask(() {
+            Navigator.pushReplacementNamed(context, '/auth'); // Redirection vers AuthScreen
+          });
         }
+
+        // Retourne un widget temporaire vide pour éviter les erreurs
+        return const SizedBox.shrink();
       },
     );
   }
 }
+
