@@ -29,7 +29,7 @@ class _AuthScreenState extends State<AuthScreen> {
     });
 
     if (user != null) {
-      // Redirigez vers l'écran de jeu
+      // Redirigez vers l'écran principal
       Navigator.pushReplacementNamed(context, '/home');
     }
   }
@@ -47,8 +47,8 @@ class _AuthScreenState extends State<AuthScreen> {
     });
 
     if (user != null) {
-      // Redirigez vers l'écran de jeu
-      Navigator.pushReplacementNamed(context, '/pendu');
+      // Redirigez vers l'écran principal
+      Navigator.pushReplacementNamed(context, '/home');
     }
   }
 
@@ -61,9 +61,9 @@ class _AuthScreenState extends State<AuthScreen> {
           Container(
             decoration: const BoxDecoration(
               gradient: LinearGradient(
-                colors: [Colors.blueAccent, Colors.purpleAccent],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
+                colors: [Color(0xFFFFCC00),Color(0xFF002E6A)],
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
               ),
             ),
           ),
@@ -83,6 +83,18 @@ class _AuthScreenState extends State<AuthScreen> {
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
+                        // Affichage de l'image (Logo)
+                        Image.network(
+                          'https://drive.google.com/uc?export=view&id=1ABSqXVSH1JmSX06GEYjs2VGzmpCUxpIx',
+                          height: 150,
+                          errorBuilder: (context, error, stackTrace) {
+                            return const Text(
+                              'Impossible de charger l\'image',
+                              style: TextStyle(color: Colors.red),
+                            );
+                          },
+                        ),
+                        const SizedBox(height: 20),
                         const Text(
                           "Bienvenue dans Golazo",
                           style: TextStyle(
@@ -91,6 +103,7 @@ class _AuthScreenState extends State<AuthScreen> {
                           ),
                         ),
                         const SizedBox(height: 20),
+                        // Champ Email
                         TextFormField(
                           controller: _emailController,
                           keyboardType: TextInputType.emailAddress,
@@ -113,6 +126,7 @@ class _AuthScreenState extends State<AuthScreen> {
                           },
                         ),
                         const SizedBox(height: 15),
+                        // Champ Mot de passe
                         TextFormField(
                           controller: _passwordController,
                           obscureText: true,
@@ -134,12 +148,12 @@ class _AuthScreenState extends State<AuthScreen> {
                           },
                         ),
                         const SizedBox(height: 10),
-                        // Mot de passe oublié
+                        // Lien "Mot de passe oublié"
                         TextButton(
                           onPressed: () {
                             if (_emailController.text.isNotEmpty) {
-                              _authService
-                                  .resetPassword(_emailController.text.trim());
+                              _authService.resetPassword(
+                                  _emailController.text.trim());
                               ScaffoldMessenger.of(context).showSnackBar(
                                 const SnackBar(
                                   content:

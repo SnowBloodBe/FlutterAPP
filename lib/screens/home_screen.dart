@@ -62,16 +62,15 @@ class _HomeScreenState extends State<HomeScreen> {
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 // Affichez le logo
-                Image.asset(
-                  'assets/logo-golazo.png',
-                  width: 150,
+                Image.network(
+                  'https://drive.google.com/uc?export=view&id=1ABSqXVSH1JmSX06GEYjs2VGzmpCUxpIx',
+                  fit: BoxFit.cover,
                   height: 150,
                   errorBuilder: (context, error, stackTrace) {
-                    return const Icon(
-                      Icons.image_not_supported,
-                      size: 100,
-                      color: Colors.grey,
-                    ); // Si l'image ne se charge pas
+                    return const Text(
+                      'Impossible de charger l\'image',
+                      style: TextStyle(color: Colors.red),
+                    );
                   },
                 ),
                 const SizedBox(height: 20),
@@ -86,9 +85,9 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
                 const SizedBox(height: 20),
                 // Statistiques de l'utilisateur
-                Text(
+                const Text(
                   "Statistiques :",
-                  style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: 10),
                 Text("Parties jouées : $_gamesPlayed"),
