@@ -16,14 +16,18 @@ class AuthService {
       );
       return userCredential.user;
     } on FirebaseAuthException catch (e) {
-      if (e.code == 'weak-password') {
-        print('Le mot de passe est trop faible.');
-      } else if (e.code == 'email-already-in-use') {
-        print('Cet email est déjà utilisé.');
-      } else if (e.code == 'invalid-email') {
-        print('Email invalide.');
-      } else {
-        print('Erreur FirebaseAuth : ${e.code}');
+      switch (e.code) {
+        case 'weak-password':
+          print('Le mot de passe est trop faible.');
+          break;
+        case 'email-already-in-use':
+          print('Cet email est déjà utilisé.');
+          break;
+        case 'invalid-email':
+          print('Email invalide.');
+          break;
+        default:
+          print('Erreur FirebaseAuth : ${e.code}');
       }
       return null;
     } catch (e) {
@@ -34,26 +38,27 @@ class AuthService {
 
   // Connexion avec email et mot de passe
   Future<User?> signInWithEmail(String email, String password) async {
-    try {
-      UserCredential userCredential = await _auth.signInWithEmailAndPassword(
-        email: email,
-        password: password,
-      );
-      return userCredential.user;
-    } on FirebaseAuthException catch (e) {
-      if (e.code == 'user-not-found') {
-        print('Utilisateur non trouvé.');
-      } else if (e.code == 'wrong-password') {
-        print('Mot de passe incorrect.');
-      } else {
-        print('Erreur FirebaseAuth : ${e.code}');
-      }
-      return null;
-    } catch (e) {
-      print("Erreur inconnue : $e");
-      return null;
+  try {
+    UserCredential userCredential = await _auth.signInWithEmailAndPassword(
+      email: email,
+      password: password,
+    );
+    return userCredential.user; // Retourne l'utilisateur connecté
+  } on FirebaseAuthException catch (e) {
+    if (e.code == 'user-not-found') {
+      print('Utilisateur non trouvé.');
+    } else if (e.code == 'wrong-password') {
+      print('Mot de passe incorrect.');
+    } else {
+      print('Erreur FirebaseAuth : ${e.code}');
     }
+    return null;
+  } catch (e) {
+    print("Erreur inconnue : $e");
+    return null;
   }
+}
+
 
   // Déconnexion
   Future<void> signOut() async {
@@ -73,8 +78,6 @@ class AuthService {
     try {
       await _auth.sendPasswordResetEmail(email: email);
       print("Email de réinitialisation envoyé.");
-      // Message de confirmation dans l'interface utilisateur
-      // Exemple : afficher une boîte de dialogue de succès
     } catch (e) {
       print("Erreur lors de la réinitialisation du mot de passe : $e");
     }
@@ -91,12 +94,14 @@ class AuthService {
         password: _adminPassword,
       );
       print("Compte administrateur créé : ${userCredential.user?.email}");
-    } catch (e) {
-      if (e.toString().contains('email-already-in-use')) {
+    } on FirebaseAuthException catch (e) {
+      if (e.code == 'email-already-in-use') {
         print("Le compte administrateur existe déjà.");
       } else {
-        print("Erreur lors de la création du compte administrateur : $e");
+        print("Erreur lors de la création du compte administrateur : ${e.code}");
       }
+    } catch (e) {
+      print("Erreur inconnue lors de la création du compte administrateur : $e");
     }
   }
 }
