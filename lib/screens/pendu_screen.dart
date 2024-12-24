@@ -16,13 +16,13 @@ class _PenduScreenState extends State<PenduScreen> {
   int _score = 0;
   final TextEditingController _guessController = TextEditingController();
   final Map<String, Color> _keyboardColors = {
-    for (var letter in 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split(''))
+    for (var letter in 'AZERTYUIOPQSDFGHJKLMWXCVBN'.split(''))
       letter: Colors.grey,
   };
 
   String _targetWord = "";
   bool _gameOver = false;
-  String _statusMessage = "Enter your guess";
+  String _statusMessage = "Entrez votre proposition";
   String _selectedDifficulty = "Facile";
   Map<String, List<String>> _wordOptions = {};
 
@@ -35,21 +35,23 @@ class _PenduScreenState extends State<PenduScreen> {
 
   Future<void> _loadPlayers() async {
     try {
-      FirebaseFirestore firestore = FirebaseFirestore.instance;
+      final firestore = FirebaseFirestore.instance;
 
       for (String difficulty in ["Facile", "Moyen", "Difficile"]) {
-        QuerySnapshot snapshot = await firestore
+        final snapshot = await firestore
             .collection('joueurs')
             .where('Niveau', isEqualTo: difficulty)
             .get();
 
-        List<String> players = snapshot.docs
+        final players = snapshot.docs
             .map((doc) => doc['Nom'].toString().toUpperCase())
             .toList();
 
-        setState(() {
-          _wordOptions[difficulty] = players;
-        });
+        if (mounted) {
+          setState(() {
+            _wordOptions[difficulty] = players;
+          });
+        }
       }
 
       _setTargetWord();
@@ -62,12 +64,12 @@ class _PenduScreenState extends State<PenduScreen> {
     try {
       final user = FirebaseAuth.instance.currentUser;
       if (user != null) {
-        DocumentSnapshot userDoc = await FirebaseFirestore.instance
+        final userDoc = await FirebaseFirestore.instance
             .collection('users')
             .doc(user.uid)
             .get();
 
-        if (userDoc.exists) {
+        if (userDoc.exists && mounted) {
           setState(() {
             _score = userDoc['score'] ?? 0;
           });
@@ -86,12 +88,59 @@ class _PenduScreenState extends State<PenduScreen> {
         _guesses.clear();
         _remainingAttempts = _maxAttempts;
         _gameOver = false;
-        _statusMessage = "Enter your guess";
+        _statusMessage = "Entrez votre proposition";
         _guessController.clear();
-        _keyboardColors
-            .forEach((key, value) => _keyboardColors[key] = Colors.grey);
+        _keyboardColors.forEach((key, value) {
+          _keyboardColors[key] = Colors.grey;
+        });
       });
     }
+  }
+
+  void _addGuess(String guess) {
+    if (guess.length != _targetWord.length) {
+      setState(() {
+        _statusMessage =
+            "Votre mot doit contenir ${_targetWord.length} lettres.";
+      });
+      return;
+    }
+
+    final guessRow = List.generate(
+      _targetWord.length,
+      (i) {
+        final letter = guess[i].toUpperCase();
+        if (_targetWord[i] == letter) {
+          _keyboardColors[letter] = Colors.green;
+          return {"letter": letter, "color": Colors.green};
+        } else if (_targetWord.contains(letter)) {
+          _keyboardColors[letter] = Colors.yellow;
+          return {"letter": letter, "color": Colors.yellow};
+        } else {
+          _keyboardColors[letter] = Colors.grey;
+          return {"letter": letter, "color": Colors.grey};
+        }
+      },
+    );
+
+    setState(() {
+      _guesses.insert(0, guessRow);
+      _guessController.clear();
+
+      if (guess == _targetWord) {
+        _statusMessage = "Bravo ! Vous avez trouvé le mot $_targetWord !";
+        _updatePlayerStats(true);
+        _gameOver = true;
+      } else if (_remainingAttempts <= 1) {
+        _remainingAttempts = 0;
+        _statusMessage = "Dommage ! Le mot correct était $_targetWord.";
+        _updatePlayerStats(false);
+        _gameOver = true;
+      } else {
+        _remainingAttempts--;
+        _statusMessage = "Essayez encore !";
+      }
+    });
   }
 
   Future<void> _updatePlayerStats(bool won) async {
@@ -115,55 +164,6 @@ class _PenduScreenState extends State<PenduScreen> {
     } catch (e) {
       print("Erreur lors de la mise à jour des statistiques utilisateur : $e");
     }
-  }
-
-  void _addGuess(String guess) {
-    if (guess.length != _targetWord.length) {
-      setState(() {
-        _statusMessage =
-            "Your guess must be ${_targetWord.length} letters long.";
-      });
-      return;
-    }
-
-    List<Map<String, dynamic>> guessRow = [];
-    for (int i = 0; i < _targetWord.length; i++) {
-      final letter = guess[i].toUpperCase();
-      if (_targetWord[i] == letter) {
-        guessRow.add({"letter": letter, "color": Colors.green});
-        _keyboardColors[letter] = Colors.green;
-      } else if (_targetWord.contains(letter)) {
-        guessRow.add({"letter": letter, "color": Colors.yellow});
-        if (_keyboardColors[letter] != Colors.green) {
-          _keyboardColors[letter] = Colors.yellow;
-        }
-      } else {
-        guessRow.add({"letter": letter, "color": Colors.grey});
-        if (_keyboardColors[letter] != Colors.green &&
-            _keyboardColors[letter] != Colors.yellow) {
-          _keyboardColors[letter] = Colors.grey;
-        }
-      }
-    }
-
-    setState(() {
-      _guesses.insert(0, guessRow);
-      _guessController.clear();
-
-      if (guess == _targetWord) {
-        _statusMessage = "Bravo ! Vous avez trouvé le mot $_targetWord !";
-        _updatePlayerStats(true);
-        _gameOver = true;
-      } else if (_remainingAttempts <= 1) {
-        _remainingAttempts = 0;
-        _statusMessage = "Dommage ! Le mot correct était $_targetWord.";
-        _updatePlayerStats(false);
-        _gameOver = true;
-      } else {
-        _remainingAttempts--;
-        _statusMessage = "Essayez encore !";
-      }
-    });
   }
 
   void _resetGame() {
@@ -226,70 +226,106 @@ class _PenduScreenState extends State<PenduScreen> {
                   ),
                 ),
                 const SizedBox(height: 20),
-                ..._guesses.map(
-                  (guessRow) {
-                    return Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: guessRow.map((entry) {
-                        return Padding(
-                          padding: const EdgeInsets.all(4.0),
-                          child: Container(
-                            width: 50,
-                            height: 50,
-                            decoration: BoxDecoration(
-                              color: entry["color"],
-                              borderRadius: BorderRadius.circular(4),
-                              border: Border.all(color: Colors.white),
-                            ),
-                            child: Center(
-                              child: Text(
-                                entry["letter"],
-                                style: const TextStyle(
-                                  fontSize: 24,
-                                  color: Colors.white,
-                                ),
+                ..._guesses.map((guessRow) {
+                  return Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: guessRow.map((entry) {
+                      return Padding(
+                        padding: const EdgeInsets.all(4.0),
+                        child: Container(
+                          width: 50,
+                          height: 50,
+                          decoration: BoxDecoration(
+                            color: entry["color"],
+                            borderRadius: BorderRadius.circular(4),
+                            border: Border.all(color: Colors.white),
+                          ),
+                          child: Center(
+                            child: Text(
+                              entry["letter"],
+                              style: const TextStyle(
+                                fontSize: 24,
+                                color: Colors.white,
                               ),
                             ),
                           ),
-                        );
-                      }).toList(),
-                    );
-                  },
-                ).toList(),
+                        ),
+                      );
+                    }).toList(),
+                  );
+                }).toList(),
                 const SizedBox(height: 20),
-                Text(
-                  _statusMessage,
-                  style: const TextStyle(
-                      fontSize: 18, fontWeight: FontWeight.bold),
+              Wrap(
+  spacing: 4,
+  runSpacing: 4,
+  alignment: WrapAlignment.center,
+  children: ["AZERTYUIOP", "QSDFGHJKLM", "WXCVBN"]
+      .expand((row) => row.split('').map((letter) {
+            return GestureDetector(
+              onTap: () {
+                if (!_gameOver &&
+                    !_guessController.text.contains(letter)) {
+                  setState(() {
+                    _guessController.text += letter;
+                  });
+                }
+              },
+              child: Container(
+                width: 40, // Réduction de la largeur
+                height: 40, // Réduction de la hauteur
+                margin: const EdgeInsets.all(4),
+                decoration: BoxDecoration(
+                  color: _keyboardColors[letter] ?? Colors.grey,
+                  borderRadius: BorderRadius.circular(4),
+                  border: Border.all(color: Colors.white),
                 ),
+                child: Center(
+                  child: Text(
+                    letter,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16, // Réduction de la taille de la police
+                    ),
+                  ),
+                ),
+              ),
+            );
+          }))
+      .toList(),
+),
+
                 const SizedBox(height: 20),
                 if (!_gameOver)
                   Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Expanded(
                         child: TextField(
                           controller: _guessController,
                           decoration: const InputDecoration(
-                            labelText: "Enter your guess",
+                            labelText: "Entrez votre mot",
                             border: OutlineInputBorder(),
                           ),
                           textCapitalization: TextCapitalization.characters,
-                          maxLength: _targetWord.isNotEmpty
-                              ? _targetWord.length
-                              : null,
+                          maxLength:
+                              _targetWord.isNotEmpty ? _targetWord.length : null,
                         ),
                       ),
-                      SizedBox(
-                        width: 70,
-                        height: 50,
-                        child: ElevatedButton(
-                          onPressed: () {
-                            if (!_gameOver) {
-                              _addGuess(_guessController.text.toUpperCase());
-                            }
-                          },
-                          child: const Text("Confirmer"),
+                      const SizedBox(width: 10),
+                      ElevatedButton(
+                        onPressed: () {
+                          if (!_gameOver &&
+                              _guessController.text.length ==
+                                  _targetWord.length) {
+                            _addGuess(_guessController.text.toUpperCase());
+                          }
+                        },
+                        style: ElevatedButton.styleFrom(
+                          shape: const CircleBorder(),
+                          padding: const EdgeInsets.all(15),
                         ),
+                        child: const Icon(Icons.check, size: 30),
                       ),
                     ],
                   ),
