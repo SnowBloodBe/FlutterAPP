@@ -16,39 +16,89 @@ class _AuthScreenState extends State<AuthScreen> {
   final _formKey = GlobalKey<FormState>();
   bool _isLoading = false;
 
+  void _showMessage(String message, {bool isError = false}) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          message,
+          style: TextStyle(color: isError ? Colors.red : Colors.white),
+        ),
+        backgroundColor: isError ? Colors.black : Colors.green,
+      ),
+    );
+  }
+
   Future<void> _signIn() async {
     if (!_formKey.currentState!.validate()) return;
+
     setState(() {
       _isLoading = true;
     });
+
     String email = _emailController.text.trim();
     String password = _passwordController.text.trim();
-    User? user = await _authService.signInWithEmail(email, password);
-    setState(() {
-      _isLoading = false;
-    });
 
-    if (user != null) {
-      // Redirigez vers l'écran principal
-      Navigator.pushReplacementNamed(context, '/home');
+    try {
+      User? user = await _authService.signInWithEmail(email, password);
+      setState(() {
+        _isLoading = false;
+      });
+
+      if (user != null) {
+        _showMessage("Connexion réussie !");
+        Navigator.pushReplacementNamed(context, '/home');
+      } else {
+        _showMessage("Échec de connexion. Vérifiez vos informations.", isError: true);
+      }
+    } catch (e) {
+      setState(() {
+        _isLoading = false;
+      });
+      _showMessage("Erreur : $e", isError: true);
     }
   }
 
   Future<void> _signUp() async {
     if (!_formKey.currentState!.validate()) return;
+
     setState(() {
       _isLoading = true;
     });
+
     String email = _emailController.text.trim();
     String password = _passwordController.text.trim();
-    User? user = await _authService.signUpWithEmail(email, password);
-    setState(() {
-      _isLoading = false;
-    });
 
-    if (user != null) {
-      // Redirigez vers l'écran principal
-      Navigator.pushReplacementNamed(context, '/home');
+    try {
+      User? user = await _authService.signUpWithEmail(email, password);
+      setState(() {
+        _isLoading = false;
+      });
+
+      if (user != null) {
+        _showMessage("Compte créé avec succès !");
+        Navigator.pushReplacementNamed(context, '/home');
+      } else {
+        _showMessage("Échec de création de compte.", isError: true);
+      }
+    } catch (e) {
+      setState(() {
+        _isLoading = false;
+      });
+      _showMessage("Erreur : $e", isError: true);
+    }
+  }
+
+  Future<void> _resetPassword() async {
+    if (_emailController.text.isEmpty) {
+      _showMessage("Veuillez entrer votre email pour réinitialiser.", isError: true);
+      return;
+    }
+
+    try {
+      await _authService.resetPassword(_emailController.text.trim());
+      _showMessage("Email de réinitialisation envoyé !");
+    } catch (e) {
+      _showMessage("Erreur : $e", isError: true);
     }
   }
 
@@ -61,7 +111,7 @@ class _AuthScreenState extends State<AuthScreen> {
           Container(
             decoration: const BoxDecoration(
               gradient: LinearGradient(
-                colors: [Color(0xFFFFCC00),Color(0xFF002E6A)],
+                colors: [Color(0xFFFFCC00), Color(0xFF002E6A)],
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
               ),
@@ -118,8 +168,7 @@ class _AuthScreenState extends State<AuthScreen> {
                             if (value == null || value.isEmpty) {
                               return "Veuillez entrer un email valide.";
                             }
-                            if (!RegExp(r'^[^@]+@[^@]+\.[^@]+')
-                                .hasMatch(value)) {
+                            if (!RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(value)) {
                               return "Format d'email invalide.";
                             }
                             return null;
@@ -150,25 +199,7 @@ class _AuthScreenState extends State<AuthScreen> {
                         const SizedBox(height: 10),
                         // Lien "Mot de passe oublié"
                         TextButton(
-                          onPressed: () {
-                            if (_emailController.text.isNotEmpty) {
-                              _authService.resetPassword(
-                                  _emailController.text.trim());
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                  content:
-                                      Text("Email de réinitialisation envoyé."),
-                                ),
-                              );
-                            } else {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                  content: Text(
-                                      "Veuillez entrer votre email pour réinitialiser."),
-                                ),
-                              );
-                            }
-                          },
+                          onPressed: _resetPassword,
                           child: const Text(
                             "Mot de passe oublié ?",
                             style: TextStyle(color: Colors.blueAccent),
